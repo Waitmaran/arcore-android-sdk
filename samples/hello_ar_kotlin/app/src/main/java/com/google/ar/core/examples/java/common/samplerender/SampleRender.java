@@ -47,7 +47,9 @@ public class SampleRender {
           @Override
           public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             GLES30.glEnable(GLES30.GL_BLEND);
+
             GLError.maybeThrowGLException("Failed to enable blending", "glEnable");
+
             renderer.onSurfaceCreated(SampleRender.this);
           }
 
@@ -61,6 +63,7 @@ public class SampleRender {
           @Override
           public void onDrawFrame(GL10 gl) {
             clear(/*framebuffer=*/ null, 0f, 0f, 0f, 1f);
+
             renderer.onDrawFrame(SampleRender.this);
           }
         });

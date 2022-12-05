@@ -20,18 +20,7 @@ import android.opengl.Matrix
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.google.ar.core.Anchor
-import com.google.ar.core.Camera
-import com.google.ar.core.DepthPoint
-import com.google.ar.core.Frame
-import com.google.ar.core.InstantPlacementPoint
-import com.google.ar.core.LightEstimate
-import com.google.ar.core.Plane
-import com.google.ar.core.Point
-import com.google.ar.core.Session
-import com.google.ar.core.Trackable
-import com.google.ar.core.TrackingFailureReason
-import com.google.ar.core.TrackingState
+import com.google.ar.core.*
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper
 import com.google.ar.core.examples.java.common.helpers.TrackingStateHelper
 import com.google.ar.core.examples.java.common.samplerender.Framebuffer
@@ -204,31 +193,31 @@ class HelloArRenderer(val activity: HelloArActivity) :
       pointCloudMesh =
         Mesh(render, Mesh.PrimitiveMode.POINTS, /*indexBuffer=*/ null, pointCloudVertexBuffers)
 
-      // Virtual object to render (ARCore pawn)
+      //Virtual object to render (ARCore pawn)
       virtualObjectAlbedoTexture =
         Texture.createFromAsset(
           render,
-          "models/pawn_albedo.png",
+          "models/TD.jpg",
           Texture.WrapMode.CLAMP_TO_EDGE,
           Texture.ColorFormat.SRGB
         )
 
-      virtualObjectAlbedoInstantPlacementTexture =
-        Texture.createFromAsset(
-          render,
-          "models/pawn_albedo_instant_placement.png",
-          Texture.WrapMode.CLAMP_TO_EDGE,
-          Texture.ColorFormat.SRGB
-        )
+//      virtualObjectAlbedoInstantPlacementTexture =
+//        Texture.createFromAsset(
+//          render,
+//          "models/pawn_albedo_instant_placement.png",
+//          Texture.WrapMode.CLAMP_TO_EDGE,
+//          Texture.ColorFormat.SRGB
+//        )
 
-      val virtualObjectPbrTexture =
-        Texture.createFromAsset(
-          render,
-          "models/pawn_roughness_metallic_ao.png",
-          Texture.WrapMode.CLAMP_TO_EDGE,
-          Texture.ColorFormat.LINEAR
-        )
-      virtualObjectMesh = Mesh.createFromAsset(render, "models/pawn.obj")
+//      val virtualObjectPbrTexture =
+//        Texture.createFromAsset(
+//          render,
+//          "models/pawn_roughness_metallic_ao.png",
+//          Texture.WrapMode.CLAMP_TO_EDGE,
+//          Texture.ColorFormat.LINEAR
+//        )
+      virtualObjectMesh = Mesh.createFromAsset(render, "models/robor.obj")
       virtualObjectShader =
         Shader.createFromAssets(
             render,
@@ -237,9 +226,9 @@ class HelloArRenderer(val activity: HelloArActivity) :
             mapOf("NUMBER_OF_MIPMAP_LEVELS" to cubemapFilter.numberOfMipmapLevels.toString())
           )
           .setTexture("u_AlbedoTexture", virtualObjectAlbedoTexture)
-          .setTexture("u_RoughnessMetallicAmbientOcclusionTexture", virtualObjectPbrTexture)
+          //.setTexture("u_RoughnessMetallicAmbientOcclusionTexture", virtualObjectPbrTexture)
           .setTexture("u_Cubemap", cubemapFilter.filteredCubemapTexture)
-          .setTexture("u_DfgTexture", dfgTexture)
+          //.setTexture("u_DfgTexture", dfgTexture)
     } catch (e: IOException) {
       Log.e(TAG, "Failed to read a required asset file", e)
       showError("Failed to read a required asset file: $e")
@@ -251,6 +240,9 @@ class HelloArRenderer(val activity: HelloArActivity) :
     virtualSceneFramebuffer.resize(width, height)
   }
 
+  var delta = 0.1f
+  var makeBigger = true
+  var rotation = 0f;
   override fun onDrawFrame(render: SampleRender) {
     val session = session ?: return
 
@@ -281,7 +273,6 @@ class HelloArRenderer(val activity: HelloArActivity) :
       }
 
     val camera = frame.camera
-
     // Update BackgroundRenderer state to match the depth settings.
     try {
       backgroundRenderer.setUseDepthVisualization(
@@ -386,7 +377,26 @@ class HelloArRenderer(val activity: HelloArActivity) :
       wrappedAnchors.filter { it.anchor.trackingState == TrackingState.TRACKING }) {
       // Get the current pose of an Anchor in world space. The Anchor pose is updated
       // during calls to session.update() as ARCore refines its estimate of the world.
+      //
       anchor.pose.toMatrix(modelMatrix, 0)
+
+      if(delta >= 0.15f) {
+        makeBigger = false
+      } else if (delta <= 0.1) {
+        makeBigger = true
+      }
+
+      if(makeBigger) {
+        delta += 0.001f
+      } else {
+        delta -= 0.001f
+      }
+      if(rotation == 360f) {
+        rotation = 0f;
+      }
+      rotation+=1f
+      Matrix.scaleM(modelMatrix, 0, delta, delta, delta)
+      Matrix.rotateM(modelMatrix, 0, rotation, 0f, 1f, 0f);
 
       // Calculate model/view/projection matrices
       Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0)
